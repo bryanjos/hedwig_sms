@@ -1,6 +1,5 @@
 defmodule Hedwig.Adapters.SMS do
   use Hedwig.Adapter
-
   require Logger
 
   defmodule State do
@@ -49,9 +48,7 @@ defmodule Hedwig.Adapters.SMS do
   end
 
   @doc false
-  def handle_info({:message, sms_callback}, %{robot: robot} = state) do
-    sms_body = Poison.decode!(sms_callback)
-
+  def handle_info({:message, sms_body}, %{robot: robot} = state) do
     msg = %Hedwig.Message{
       adapter: {__MODULE__, self},
       ref: make_ref(),
@@ -66,16 +63,17 @@ defmodule Hedwig.Adapters.SMS do
   end
 
   defp send_message(phone_number, body, state) do
+    Logger.info "sending #{body} to #{phone_number}"
     endpoint = "https://#{state.account_sid}:#{state.account_token}@api.twilio.com/2010-04-01/Accounts/#{state.account_sid}/Messages.json"
     body = URI.encode("To=#{phone_number}&From=#{state.account_number}&Body=#{body}")
     headers = [{"Content-Type", "application/x-www-form-urlencoded" }]
 
     case HTTPoison.post!(endpoint, body, headers) do
-      %HTTPoison.Response{status_code: status_code} when status_code in 200..299 ->
-        Logger.debug("Good Request")
+      %HTTPoison.Response{status_code: status_code} = response when status_code in 200..299 ->
+        Logger.info("#{inspect response}")
 
-      %HTTPoison.Response{status_code: status_code} when status_code in 400..599 ->
-        Logger.debug("Bad Request")
+      %HTTPoison.Response{status_code: status_code} = response when status_code in 400..599 ->
+        Logger.error("#{inspect response}")
     end
   end
 
@@ -90,7 +88,10 @@ defmodule Hedwig.Adapters.SMS do
     end
 
     def call(%Plug.Conn{ request_path: "/", method: "POST" } = conn, opts) do
-      Kernel.send opts[:adapter_pid], { :message, conn.body }
+      Logger.info("#{inspect conn}")
+      {:ok, body, conn} = Plug.Conn.read_body(conn)
+      body = URI.decode_query(body)
+      Kernel.send opts[:adapter_pid], { :message, body }
       conn
       |> send_resp(200, "ok")
       |> halt
