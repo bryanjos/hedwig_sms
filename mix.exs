@@ -20,8 +20,7 @@ defmodule HedwigSMS.Mixfile do
       {:hedwig, "~> 1.0.0-rc3"},
       {:httpoison, "~> 0.8.0"},
       {:cowboy, "~> 1.0"},
-      {:plug, "~> 1.1"},
-      {:poison, "~> 2.1"}
+      {:plug, "~> 1.1"}
     ]
   end
 end

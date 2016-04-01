@@ -6,23 +6,18 @@ defmodule Hedwig.Adapters.SMS do
     defstruct account_sid: nil,
     account_token: nil,
     account_number: nil,
-    robot: nil,
-    web: nil
+    robot: nil
   end
 
 
   def init({robot, opts}) do
     Hedwig.Robot.register(robot, opts[:name])
-    plug_opts = [adapter_pid: self]
-    cowboy_opts = Keyword.put([], :port, Keyword.get(opts, :port, 4000))
-    {:ok, web} = Plug.Adapters.Cowboy.http Hedwig.Adapters.SMS.Callback, plug_opts, cowboy_opts
 
     state = %State{
       account_sid: opts[:account_sid],
       account_token: opts[:auth_token],
       account_number: opts[:account_number],
-      robot: robot,
-      web: web
+      robot: robot
     }
 
     { :ok, state }
@@ -48,13 +43,13 @@ defmodule Hedwig.Adapters.SMS do
   end
 
   @doc false
-  def handle_info({:message, sms_body}, %{robot: robot} = state) do
+  def handle_info({:message, %Hedwig.Adapters.SMS.Data{ body: body, from: from } }, %{robot: robot} = state) do
     msg = %Hedwig.Message{
       adapter: {__MODULE__, self},
       ref: make_ref(),
-      text: sms_body["Body"],
+      text: body,
       type: "chat",
-      user: sms_body["From"]
+      user: from
     }
 
     Hedwig.Robot.handle_message(robot, msg)
@@ -76,32 +71,4 @@ defmodule Hedwig.Adapters.SMS do
         Logger.error("#{inspect response}")
     end
   end
-
-  defmodule Callback do
-    use Plug.Builder
-    require Logger
-
-    plug Plug.Logger
-
-    def init([adapter_pid: _] = options) do
-      options
-    end
-
-    def call(%Plug.Conn{ request_path: "/", method: "POST" } = conn, opts) do
-      Logger.info("#{inspect conn}")
-      {:ok, body, conn} = Plug.Conn.read_body(conn)
-      body = URI.decode_query(body)
-      Kernel.send opts[:adapter_pid], { :message, body }
-      conn
-      |> send_resp(200, "ok")
-      |> halt
-    end
-
-    def call(conn, opts) do
-      conn
-      |> send_resp(404, "Not found")
-      |> halt
-    end
-  end
-
 end
