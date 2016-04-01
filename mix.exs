@@ -8,7 +8,11 @@ defmodule HedwigSMS.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps,
+     docs: [
+       extras: ["README.md"]
+     ]
+    ]
   end
 
   def application do
@@ -17,10 +21,13 @@ defmodule HedwigSMS.Mixfile do
 
   defp deps do
     [
-      {:hedwig, "~> 1.0.0-rc3"},
+      {:hedwig, github: "hedwig-im/hedwig"},
       {:httpoison, "~> 0.8.0"},
       {:cowboy, "~> 1.0"},
-      {:plug, "~> 1.1"}
+      {:plug, "~> 1.1"},
+      {:earmark, "~> 0.2", only: :dev },
+      {:ex_doc, "~> 0.11", only: :dev },
+      {:credo, "~> 0.2.0", only: :dev }
     ]
   end
 end

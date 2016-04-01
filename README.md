@@ -2,10 +2,9 @@
 
 An SMS [Hedwig](https://github.com/hedwig-im/hedwig) adapter powered by Twilio.
 
-In order to receive messages, this adapter also uses cowboy and plug to define an endpoint to be used as your Request URL for your phone number.
-You can define the port using the configuration described below.
+Refer to the [Create a Robot Module](https://github.com/hedwig-im/hedwig#create-a-robot-module) section for creating a bot.
 
-### Configuration
+## Configuration
 
 Below is an example configuration
 
@@ -18,7 +17,6 @@ config :alfred, Alfred.Robot,
   account_sid: "", #your twilio sid
   auth_token: "", #your twilio auth token
   account_number: "+10000000000", # your twilio number
-  port: 4000, # the port used by the callback http server,
   responders: [
     {Hedwig.Responders.Help, []},
     {Hedwig.Responders.Panzy, []},
@@ -27,20 +25,37 @@ config :alfred, Alfred.Robot,
   ]
 ```
 
-## Installation
+## Twilio Callback
+Messages are received from Twilio using an HTTP callback. You can use the included `Hedwig.Adapters.SMS.Callback` module or define one yourself
+as long as it calls `Hedwig.Adapters.SMS.handle_message/2` to send the message to the robot.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+### Using the included server
 
-  1. Add hedwig_sms to your list of dependencies in `mix.exs`:
+To use the included callback with your robot, add it to your supervision tree alongside your robot
 
-        def deps do
-          [{:hedwig_sms, "~> 0.1.0"}]
-        end
+```elixir
+    children = [
+      worker(Alfred.Robot, []),
+      worker(Hedwig.Adapters.SMS.Callback, [:alfred, Alfred.Robot])
+    ]
+```
 
-  2. Ensure hedwig_sms is started before your application:
+The parameters are:
+* `otp_app` - your otp app name
+* `robot_module` - your robot module. This and `otp_app` are used to get the name of your robot
+* `cowboy_options` - a keyword list of options to pass to cowboy (optional)
 
-        def application do
-          [applications: [:hedwig_sms]]
-        end
+### Defining your own callback
 
-Refer to the [Create a Robot Module](https://github.com/hedwig-im/hedwig#create-a-robot-module) section for creating a bot.
+If you are defining your own callback (for instance in a phoenix app), just make sure to call `Hedwig.Adapters.SMS.handle_message/2`
+
+```elixir
+    def my_twilio_callback(conn, params) do
+        case Hedwig.Adapters.SMS.handle_message("alfred", params) do
+            {:error, reason} ->
+                # Handle robot not found
+            :ok ->
+                # Message sent to robot.
+       end
+    end
+```

@@ -1,19 +1,16 @@
 defmodule Hedwig.Adapters.SMS do
+  @moduledoc """
+  Hedwig adapter that communicates via SMS using the Twilio API.
+  """
   use Hedwig.Adapter
   require Logger
 
-  defmodule State do
-    defstruct account_sid: nil,
-    account_token: nil,
-    account_number: nil,
-    robot: nil
-  end
-
-
+  @doc false
   def init({robot, opts}) do
+    HTTPoison.start
     Hedwig.Robot.register(robot, opts[:name])
 
-    state = %State{
+    state = %{
       account_sid: opts[:account_sid],
       account_token: opts[:auth_token],
       account_number: opts[:account_number],
@@ -23,52 +20,78 @@ defmodule Hedwig.Adapters.SMS do
     { :ok, state }
   end
 
+  @doc false
   def handle_cast({:emote, msg}, state) do
     send_message(msg.user, msg.text, state)
     {:noreply, state}
   end
 
+  @doc false
   def handle_cast({:reply, msg}, state) do
     send_message(msg.user, msg.text, state)
     {:noreply, state}
   end
 
+  @doc false
   def handle_cast({:send, msg}, state) do
     send_message(msg.user, msg.text, state)
     {:noreply, state}
   end
 
-  def handle_info({:message, ""}, state) do
-    {:noreply, state}
-  end
-
-  @doc false
-  def handle_info({:message, %Hedwig.Adapters.SMS.Data{ body: body, from: from } }, %{robot: robot} = state) do
-    msg = %Hedwig.Message{
-      adapter: {__MODULE__, self},
-      ref: make_ref(),
-      text: body,
-      type: "chat",
-      user: from
-    }
-
-    Hedwig.Robot.handle_message(robot, msg)
-
-    {:noreply, state}
-  end
-
   defp send_message(phone_number, body, state) do
     Logger.info "sending #{body} to #{phone_number}"
+    case build_request(phone_number, body, state) do
+      {:ok, %HTTPoison.Response{status_code: status_code} = response } when status_code in 200..299 ->
+        Logger.info("#{inspect response}")
+
+      {:ok, %HTTPoison.Response{status_code: status_code} = response } when status_code in 400..599 ->
+        Logger.error("#{inspect response}")
+
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        Logger.error("#{inspect reason}")
+    end
+  end
+
+  defp build_request(phone_number, body, state) do
     endpoint = "https://#{state.account_sid}:#{state.account_token}@api.twilio.com/2010-04-01/Accounts/#{state.account_sid}/Messages.json"
     body = URI.encode("To=#{phone_number}&From=#{state.account_number}&Body=#{body}")
     headers = [{"Content-Type", "application/x-www-form-urlencoded" }]
+    HTTPoison.post(endpoint, body, headers)
+  end
 
-    case HTTPoison.post!(endpoint, body, headers) do
-      %HTTPoison.Response{status_code: status_code} = response when status_code in 200..299 ->
-        Logger.info("#{inspect response}")
 
-      %HTTPoison.Response{status_code: status_code} = response when status_code in 400..599 ->
-        Logger.error("#{inspect response}")
+  @doc """
+  Sends the Twilio request body from the callback to the robot
+  with the specified `name`. `req_body` is assumed to be the post
+  body string or a map with keys `"From"` and `"Body"`.
+
+  Use this function if you are defining your on receive callback
+  from Twilio
+  """
+  @spec handle_message(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
+  def handle_message(name, req_body) do
+    case Hedwig.whereis(name) do
+      :undefined ->
+        Logger.error("Robot named #{name} not found")
+        { :error, :not_found }
+
+      robot ->
+        msg = build_message(req_body)
+        Hedwig.Robot.handle_message(robot, msg)
+        :ok
     end
+  end
+
+  defp build_message(body) when is_binary(body) do
+    build_message URI.decode_query(body)
+  end
+
+  defp build_message(%{ "From" => user, "Body" => text }) do
+    %Hedwig.Message{
+      ref: make_ref(),
+      text: text,
+      type: "chat",
+      user: user
+    }
   end
 end
