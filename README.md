@@ -31,7 +31,26 @@ as long as it calls `Hedwig.Adapters.SMS.handle_message/2` to send the message t
 
 ### Using the included server
 
-To use the included callback with your robot, add it to your supervision tree alongside your robot
+To use the included callback with your robot, update your dependencies by including `plug` and `cowboy`:
+
+```elixir
+  defp deps do
+    [
+      {:cowboy, "~> 1.0"},
+      {:plug, "~> 1.1"}
+    ]
+  end
+```
+
+Next, Add cowboy to your list of applications:
+
+```elixir
+  def application do
+    [applications: [:logger, :hedwig, :cowboy]]
+  end
+```
+
+Finally, add `Hedwig.Adapters.SMS.Callback` to your supervision tree alongside your robot
 
 ```elixir
     children = [
@@ -41,8 +60,8 @@ To use the included callback with your robot, add it to your supervision tree al
 ```
 
 The parameters are:
-* `otp_app` - your otp app name
-* `robot_module` - your robot module. This and `otp_app` are used to get the name of your robot
+* `otp_app` - your otp app name (required)
+* `robot_module` - your robot module. This and `otp_app` are used to get the name of your robot (required)
 * `cowboy_options` - a keyword list of options to pass to cowboy (optional)
 
 ### Defining your own callback

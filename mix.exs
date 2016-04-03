@@ -16,15 +16,15 @@ defmodule HedwigSMS.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :hedwig, :cowboy, :httpoison]]
+    [applications: [:logger, :hedwig, :httpoison]]
   end
 
   defp deps do
     [
       {:hedwig, github: "hedwig-im/hedwig"},
       {:httpoison, "~> 0.8.0"},
-      {:cowboy, "~> 1.0"},
-      {:plug, "~> 1.1"},
+      {:cowboy, "~> 1.0", optional: true},
+      {:plug, "~> 1.1", optional: true},
       {:earmark, "~> 0.2", only: :dev },
       {:ex_doc, "~> 0.11", only: :dev },
       {:credo, "~> 0.2.0", only: :dev }
