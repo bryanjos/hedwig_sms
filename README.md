@@ -19,7 +19,6 @@ config :alfred, Alfred.Robot,
   account_number: "+10000000000", # your twilio number
   responders: [
     {Hedwig.Responders.Help, []},
-    {Hedwig.Responders.Panzy, []},
     {Hedwig.Responders.GreatSuccess, []},
     {Hedwig.Responders.ShipIt, []}
   ]

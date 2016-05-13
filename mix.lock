@@ -7,7 +7,7 @@
   "ex_doc": {:hex, :ex_doc, "0.11.4"},
   "gproc": {:hex, :gproc, "0.5.0"},
   "hackney": {:hex, :hackney, "1.5.7"},
-  "hedwig": {:git, "https://github.com/hedwig-im/hedwig.git", "18273f14fb8a6d5869551f0c7a3d2eebb2b3662a", []},
+  "hedwig": {:hex, :hedwig, "1.0.0-rc.4"},
   "httpoison": {:hex, :httpoison, "0.8.2"},
   "idna": {:hex, :idna, "1.2.0"},
   "metrics": {:hex, :metrics, "1.0.1"},
