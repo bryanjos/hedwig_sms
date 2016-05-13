@@ -3,7 +3,6 @@ defmodule HedwigSMS.Mixfile do
 
   def project do
     [app: :hedwig_sms,
-     name: "Hedwig SMS",
      version: "0.1.0",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
@@ -12,8 +11,9 @@ defmodule HedwigSMS.Mixfile do
      docs: [
        extras: ["README.md"]
      ],
-     description: "A SMS adapter for Hedwig powered by Twilio",
-     source_url: "https://github.com/bryanjos/hedwig_sms"
+     description: "A SMS adapter for Hedwig",
+     source_url: "https://github.com/bryanjos/hedwig_sms",
+     package: package
     ]
   end
 
