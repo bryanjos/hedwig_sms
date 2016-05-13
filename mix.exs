@@ -11,7 +11,9 @@ defmodule HedwigSMS.Mixfile do
      deps: deps,
      docs: [
        extras: ["README.md"]
-     ]
+     ],
+     description: "A SMS adapter for Hedwig powered by Twilio",
+     source_url: "https://github.com/bryanjos/hedwig_sms"
     ]
   end
 
@@ -29,5 +31,14 @@ defmodule HedwigSMS.Mixfile do
       {:ex_doc, "~> 0.11", only: :dev },
       {:credo, "~> 0.2.0", only: :dev }
     ]
+  end
+
+  defp package do
+    [files: ["lib", "mix.exs", "README*", "LICENSE*"],
+     maintainers: ["Bryan Joseph"],
+     licenses: ["MIT"],
+     links: %{
+       "GitHub" => "https://github.com/bryanjos/hedwig_sms",
+     }]
   end
 end
