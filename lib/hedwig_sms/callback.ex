@@ -34,7 +34,7 @@ if Code.ensure_loaded?(Plug.Conn) and Code.ensure_loaded?(Plug.Adapters.Cowboy) 
       {:ok, body, conn} = Plug.Conn.read_body(conn)
       robot_name = opts[:name]
 
-      case Hedwig.Adapters.SMS.handle_message(robot_name, body) do
+      case Hedwig.Adapters.SMS.handle_in(robot_name, body) do
         {:error, _} ->
           conn
           |> send_resp(404, "Not found")

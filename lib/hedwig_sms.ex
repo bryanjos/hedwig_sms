@@ -8,7 +8,7 @@ defmodule Hedwig.Adapters.SMS do
   @doc false
   def init({robot, opts}) do
     HTTPoison.start
-    Hedwig.Robot.register(robot, opts[:name])
+    :global.register_name(opts[:name], robot)
 
     state = %{
       account_sid: opts[:account_sid],
@@ -68,17 +68,16 @@ defmodule Hedwig.Adapters.SMS do
   Use this function if you are defining your on receive callback
   from Twilio
   """
-  @spec handle_message(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
-  def handle_message(name, req_body) do
-    case Hedwig.whereis(name) do
+  @spec handle_in(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
+  def handle_in(name, req_body) do
+    case :global.whereis_name(name) do
       :undefined ->
         Logger.error("Robot named #{name} not found")
         { :error, :not_found }
 
       robot ->
         msg = build_message(req_body)
-        Hedwig.Robot.handle_message(robot, msg)
-        :ok
+        Hedwig.Robot.handle_in(robot, msg)
     end
   end
 
