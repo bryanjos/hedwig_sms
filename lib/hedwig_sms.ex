@@ -8,7 +8,8 @@ defmodule Hedwig.Adapters.SMS do
   @doc false
   def init({robot, opts}) do
     HTTPoison.start
-    :global.register_name(opts[:name], robot)
+    :global.register_name("#{opts[:name]}_adapter", robot)
+    Hedwig.Robot.handle_connect(robot)
 
     state = %{
       account_sid: opts[:account_sid],
