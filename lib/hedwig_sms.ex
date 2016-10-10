@@ -8,7 +8,7 @@ defmodule Hedwig.Adapters.SMS do
   @doc false
   def init({robot, opts}) do
     HTTPoison.start
-    :global.register_name({__MODULE__, robot}, self())
+    :global.register_name({ __MODULE__, opts[:name] }, self())
     Hedwig.Robot.handle_connect(robot)
 
     state = %{
