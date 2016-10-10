@@ -23,13 +23,13 @@ defmodule HedwigSMS.Mixfile do
 
   defp deps do
     [
-      {:hedwig, "~> 1.0.0-rc.4"},
+      {:hedwig, github: "hedwig-im/hedwig"},
       {:httpoison, "~> 0.8.0"},
       {:cowboy, "~> 1.0", optional: true},
-      {:plug, "~> 1.1", optional: true},
-      {:earmark, "~> 0.2", only: :dev },
-      {:ex_doc, "~> 0.11", only: :dev },
-      {:credo, "~> 0.2.0", only: :dev }
+      {:plug, "~> 1.2", optional: true},
+      {:earmark, "~> 1.0", only: :dev },
+      {:ex_doc, "~> 0.14", only: :dev },
+      {:credo, "~> 0.4", only: :dev }
     ]
   end
 

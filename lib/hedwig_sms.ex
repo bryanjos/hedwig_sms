@@ -8,7 +8,8 @@ defmodule Hedwig.Adapters.SMS do
   @doc false
   def init({robot, opts}) do
     HTTPoison.start
-    Hedwig.Robot.register(robot, opts[:name])
+    :global.register_name(__MODULE__, self())
+    Hedwig.Robot.handle_connect(robot)
 
     state = %{
       account_sid: opts[:account_sid],
@@ -38,6 +39,11 @@ defmodule Hedwig.Adapters.SMS do
     {:noreply, state}
   end
 
+  @doc false
+  def handle_call(:robot, _, %{robot: robot} = state) do
+    {:reply, robot, state}
+  end
+
   defp send_message(phone_number, body, state) do
     Logger.info "sending #{body} to #{phone_number}"
     case build_request(phone_number, body, state) do
@@ -62,23 +68,23 @@ defmodule Hedwig.Adapters.SMS do
 
   @doc """
   Sends the Twilio request body from the callback to the robot
-  with the specified `name`. `req_body` is assumed to be the post
+  associated with the adapter. `req_body` is assumed to be the post
   body string or a map with keys `"From"` and `"Body"`.
 
   Use this function if you are defining your on receive callback
   from Twilio
   """
-  @spec handle_message(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
-  def handle_message(name, req_body) do
-    case Hedwig.whereis(name) do
+  @spec handle_in(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
+  def handle_in(req_body) do
+    case :global.whereis_name(__MODULE__) do
       :undefined ->
-        Logger.error("Robot named #{name} not found")
+        Logger.error("#{__MODULE__} not found")
         { :error, :not_found }
 
-      robot ->
+      adapter ->
+        robot = GenServer.call(adapter, :robot)
         msg = build_message(req_body)
-        Hedwig.Robot.handle_message(robot, msg)
-        :ok
+        Hedwig.Robot.handle_in(robot, msg)
     end
   end
 
