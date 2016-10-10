@@ -3,7 +3,7 @@ defmodule HedwigSMS.Mixfile do
 
   def project do
     [app: :hedwig_sms,
-     version: "0.1.0",
+     version: "0.2.0-dev",
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,

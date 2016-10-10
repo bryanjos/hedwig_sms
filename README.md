@@ -26,7 +26,7 @@ config :alfred, Alfred.Robot,
 
 ## Twilio Callback
 Messages are received from Twilio using an HTTP callback. You can use the included `Hedwig.Adapters.SMS.Callback` module or define one yourself
-as long as it calls `Hedwig.Adapters.SMS.handle_in/1` to send the message to the robot.
+as long as it calls `Hedwig.Adapters.SMS.handle_in/2` to send the message to the robot.
 
 ### Using the included server
 
@@ -54,22 +54,20 @@ Finally, add `Hedwig.Adapters.SMS.Callback` to your supervision tree alongside y
 ```elixir
     children = [
       worker(Alfred.Robot, []),
-      worker(Hedwig.Adapters.SMS.Callback, [:alfred, Alfred.Robot])
+      worker(Hedwig.Adapters.SMS.Callback, [])
     ]
 ```
 
 The parameters are:
-* `otp_app` - your otp app name (required)
-* `robot_module` - your robot module. This and `otp_app` are used to get the name of your robot (required)
 * `cowboy_options` - a keyword list of options to pass to cowboy (optional)
 
 ### Defining your own callback
 
-If you are defining your own callback (for instance in a phoenix app), just make sure to call `Hedwig.Adapters.SMS.handle_in/1`
+If you are defining your own callback (for instance in a phoenix app), just make sure to call `Hedwig.Adapters.SMS.handle_in/2`
 
 ```elixir
     def my_twilio_callback(conn, params) do
-        case Hedwig.Adapters.SMS.handle_in(params) do
+        case Hedwig.Adapters.SMS.handle_in(robot_name, params) do
             {:error, reason} ->
                 # Handle robot not found
             :ok ->

@@ -8,7 +8,7 @@ defmodule Hedwig.Adapters.SMS do
   @doc false
   def init({robot, opts}) do
     HTTPoison.start
-    :global.register_name(__MODULE__, self())
+    :global.register_name({__MODULE__, robot}, self())
     Hedwig.Robot.handle_connect(robot)
 
     state = %{
@@ -75,10 +75,10 @@ defmodule Hedwig.Adapters.SMS do
   from Twilio
   """
   @spec handle_in(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
-  def handle_in(req_body) do
-    case :global.whereis_name(__MODULE__) do
+  def handle_in(robot_name, req_body) do
+    case :global.whereis_name({__MODULE__, robot_name}) do
       :undefined ->
-        Logger.error("#{__MODULE__} not found")
+        Logger.error("#{{__MODULE__, robot_name}} not found")
         { :error, :not_found }
 
       adapter ->
