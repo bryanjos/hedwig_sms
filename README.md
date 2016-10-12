@@ -49,7 +49,7 @@ Next, Add cowboy to your list of applications:
   end
 ```
 
-Finally, add `Hedwig.Adapters.SMS.Callback` to your supervision tree alongside your robot
+Next, add `Hedwig.Adapters.SMS.Callback` to your supervision tree alongside your robot
 
 ```elixir
     children = [
@@ -58,8 +58,13 @@ Finally, add `Hedwig.Adapters.SMS.Callback` to your supervision tree alongside y
     ]
 ```
 
-The parameters are:
-* `cowboy_options` - a keyword list of options to pass to cowboy (optional)
+Optionally, add the following configuration block to your config to set the `base_path` and/or the `port`
+
+```elixir
+config :hedwig_sms, Hedwig.Adapters.SMS.Callback,
+  base_path: "/mybasepath" # defaults to "/sms",
+  port: 3000 # defaults to 4000
+```
 
 ### Defining your own callback
 
