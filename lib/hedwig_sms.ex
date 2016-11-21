@@ -71,7 +71,7 @@ defmodule Hedwig.Adapters.SMS do
   associated with the adapter. `req_body` is assumed to be the post
   body string or a map with keys `"From"` and `"Body"`.
 
-  Use this function if you are defining your on receive callback
+  Use this function if you are defining your own receive callback
   from Twilio
   """
   @spec handle_in(String.t, String.t | Map.t) :: {:error, :not_found} | :ok
