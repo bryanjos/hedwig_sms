@@ -7,13 +7,13 @@ defmodule HedwigSMS.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps,
+     deps: deps(),
      docs: [
        extras: ["README.md"]
      ],
      description: "A SMS adapter for Hedwig",
      source_url: "https://github.com/bryanjos/hedwig_sms",
-     package: package
+     package: package()
     ]
   end
 
