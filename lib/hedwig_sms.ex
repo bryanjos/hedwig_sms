@@ -9,7 +9,6 @@ defmodule Hedwig.Adapters.SMS do
   def init({robot, opts}) do
     HTTPoison.start
     :global.register_name({ __MODULE__, opts[:name] }, self())
-    Hedwig.Robot.handle_connect(robot)
 
     state = %{
       account_sid: opts[:account_sid],
@@ -17,6 +16,8 @@ defmodule Hedwig.Adapters.SMS do
       account_number: opts[:account_number],
       robot: robot
     }
+
+    Kernel.send(self(), :connected)
 
     { :ok, state }
   end
@@ -42,6 +43,12 @@ defmodule Hedwig.Adapters.SMS do
   @doc false
   def handle_call(:robot, _, %{robot: robot} = state) do
     {:reply, robot, state}
+  end
+
+  @doc false
+  def handle_info(:connected, %{robot: robot} = state) do
+    :ok = Hedwig.Robot.handle_connect(robot)
+    {:noreply, state}
   end
 
   defp send_message(phone_number, body, state) do
