@@ -15,12 +15,16 @@ if Code.ensure_loaded?(Plug.Conn) and Code.ensure_loaded?(Plug.Adapters.Cowboy) 
 
     @spec start_link() :: GenServer.on_start
     def start_link() do
-      start_link([port: 4000])
-    end
+      config = Application.get_env(:hedwig_sms, __MODULE__, [])
 
-    @spec start_link(Keyword.t) :: GenServer.on_start
-    def start_link(cowboy_options) do
-      Plug.Adapters.Cowboy.http __MODULE__, [], cowboy_options
+      port = Keyword.get(config, :port, 4000)
+      cowboy_options = [port: port]
+
+      base_path = Keyword.get(config, :base_path, "/sms")
+      base_path = Path.join(["/", base_path])
+      plug_options = [base_path: base_path]
+
+      Plug.Adapters.Cowboy.http __MODULE__, plug_options, cowboy_options
     end
 
     @doc false
@@ -29,18 +33,28 @@ if Code.ensure_loaded?(Plug.Conn) and Code.ensure_loaded?(Plug.Adapters.Cowboy) 
     end
 
     @doc false
-    def call(%Plug.Conn{ request_path: "/sms/" <> robot_name, method: "POST" } = conn, _) do
-      {:ok, body, conn} = Plug.Conn.read_body(conn)
+    def call(%Plug.Conn{ request_path: request_path, method: "POST" } = conn, opts) do
 
-      case Hedwig.Adapters.SMS.handle_in(robot_name, body) do
-        {:error, _} ->
-          conn
-          |> send_resp(404, "Not found")
-          |> halt
-        :ok ->
-          conn
-          |> send_resp(200, "ok")
-          |> halt
+      if String.starts_with?(request_path, base_path) do
+        robot_name = List.last(Path.split(request_path))
+
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+        case Hedwig.Adapters.SMS.handle_in(robot_name, body) do
+          {:error, _} ->
+            conn
+            |> send_resp(404, "Not found")
+            |> halt
+          :ok ->
+            conn
+            |> send_resp(200, "ok")
+            |> halt
+        end
+
+      else
+        conn
+        |> send_resp(404, "Not found")
+        |> halt
       end
     end
 
